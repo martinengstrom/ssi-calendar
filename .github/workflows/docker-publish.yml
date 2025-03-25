@@ -11,7 +11,7 @@ on:
 
 env:
   REGISTRY: harbor.home.sigkill.me
-  IMAGE_NAME: kubernetes/${{ github.repository }}
+  IMAGE_NAME: kubernetes/ssi-calendar
 
 
 jobs:
