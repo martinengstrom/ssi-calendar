@@ -13,7 +13,9 @@ type SSIClient struct {
 }
 
 func NewClient(apikey string) *SSIClient {
-  return &SSIClient{APIKey: apikey}
+  return &SSIClient{
+    APIKey: apikey,
+  }
 }
 
 func (c *SSIClient) Request(req *graphql.Request, respData interface{}) error {
@@ -24,18 +26,6 @@ func (c *SSIClient) Request(req *graphql.Request, respData interface{}) error {
     return err
   }
   return nil
-}
-
-func (c *EventListResponse) FilterEvents() {
-  filteredEvents := []EventDetails{}
-
-  for _, event := range c.Events {
-    if (event.SubRule == "nm") && (event.Level != "l1") {
-      filteredEvents = append(filteredEvents, event)
-    }
-  }
-
-  c.Events = filteredEvents
 }
 
 func (c *EventDetails) IsEqualTo(event EventDetails) bool {
@@ -86,7 +76,6 @@ func (c *SSIClient) GetEvents() EventListResponse {
     log.Fatal(err)
   }
 
-  response.FilterEvents()
   return response
 }
 

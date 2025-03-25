@@ -26,9 +26,9 @@ type ErrorLocation struct {
 }
 
 type RefreshTokenDetails struct {
-  Token string        `json:"token"`
-  Created string      `json:"created"`
-  ExpiresAt time.Time `json:"expires_at"`
+  Token string      `json:"token"`
+  Created string    `json:"created"`
+  ExpiresAt string  `json:"expires_at"`
 }
 
 type TokenDetails struct {

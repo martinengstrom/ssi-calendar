@@ -8,6 +8,8 @@ import (
   "os/signal"
   "syscall"
   "time"
+  "strings"
+  "regexp"
   "github.com/arran4/golang-ical"
   "ssi-calendar/client"
   "ssi-calendar/storage"
@@ -36,6 +38,7 @@ import (
 
 var db *storage.Storage
 var ssiClient *client.SSIClient
+var levelRE = regexp.MustCompile(`^l[2-5]$`)
 
 func updateEvents() {
   eventsResponse := ssiClient.GetEvents()
@@ -57,7 +60,7 @@ func startPeriodicTask(interval time.Duration, task func()) {
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
-  io.WriteString(w, "SSI Calendar 1.0\n")
+  io.WriteString(w, "SSI Calendar 1.1\n")
 }
 
 func getEvents(w http.ResponseWriter, r *http.Request) {
@@ -79,6 +82,18 @@ func getCalendar(w http.ResponseWriter, r *http.Request) {
     if time.Now().After(event.Ends) {
       continue
     }
+    // Also check here if the event is larger than a week, if so also ignore it
+    // this is a stop-gap solution until I can figure out why these events appear in the first place
+    if int64(event.Starts.Sub(event.Ends)) / 24 > 7 {
+      continue
+    }
+
+    // Filter was moved out of API client so we will store all events and then filter them on retrieval
+    // TODO: Perhaps move this to a common function so getEvents() will also get a filter
+    if (event.SubRule != "nm") || (!levelRE.MatchString(event.Level)) {
+      continue
+    }
+
     cevent := cal.AddEvent(event.Id)
     cevent.SetCreatedTime(event.Starts)
     cevent.SetDtStampTime(event.Starts)
@@ -112,6 +127,8 @@ func main() {
   key := os.Getenv("SSI_APIKEY")
   ssiClient = client.NewClient(key)
 
+  debug := strings.ToLower(os.Getenv("DEBUG")) == "true"
+
   // Periodically fetch new events
   updateEvents() // Do an initial fetch
   startPeriodicTask(3*time.Hour, func() {
@@ -121,9 +138,11 @@ func main() {
   // Set up HTTP server
   // Also handle SIGTERM so we can let the defers do their thing
   http.HandleFunc("/", getRoot)
-  http.HandleFunc("/events", getEvents)
-  http.HandleFunc("/update", doUpdate)
   http.HandleFunc("/calendar.ics", getCalendar)
+  if debug {
+    http.HandleFunc("/events", getEvents)
+    http.HandleFunc("/update", doUpdate)
+  }
 
   stop := make(chan os.Signal, 1)
   signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
