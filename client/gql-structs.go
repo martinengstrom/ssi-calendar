@@ -43,7 +43,7 @@ type EventDetails struct {
   Id string                     `json:"id"`
   Name string                   `json:"name"`
   Starts time.Time              `json:"starts"`
-  Ends time.Time                `json:"ends"`
+  Ends *time.Time               `json:"ends"`
   State string                  `json:"state"`
   Status string                 `json:"status"`
   RegistrationStarts time.Time  `json:"registration_starts"`

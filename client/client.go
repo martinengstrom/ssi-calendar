@@ -20,7 +20,7 @@ func NewClient(apikey string) *SSIClient {
 
 func (c *SSIClient) Request(req *graphql.Request, respData interface{}) error {
   client := graphql.NewClient("https://shootnscoreit.com/graphql/")
-  //client.Log = func(s string) { log.Println(s) }
+  client.Log = func(s string) { log.Println(s) }
   ctx := context.Background()
   if err := client.Run(ctx, req, respData); err != nil {
     return err

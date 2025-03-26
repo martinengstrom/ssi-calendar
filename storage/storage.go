@@ -99,7 +99,6 @@ func (c *Storage) GetEvent(id string) client.EventDetails {
 }
 
 func (c* Storage) GetEvents() []client.EventDetails {
-  var retrievedEvent client.EventDetails
   var retrievedEvents []client.EventDetails
   err := c.Badger.View(func(txn *badger.Txn) error {
     opts := badger.DefaultIteratorOptions
@@ -112,6 +111,7 @@ func (c* Storage) GetEvents() []client.EventDetails {
       //key := item.Key()
 
       err := item.Value(func(val []byte) error {
+        var retrievedEvent client.EventDetails
         e := c.Deserialize(val, &retrievedEvent)
         retrievedEvents = append(retrievedEvents, retrievedEvent)
         return e

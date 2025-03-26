@@ -10,6 +10,7 @@ import (
   "time"
   "strings"
   "regexp"
+  "log"
   "github.com/arran4/golang-ical"
   "ssi-calendar/client"
   "ssi-calendar/storage"
@@ -43,6 +44,11 @@ var levelRE = regexp.MustCompile(`^l[2-5]$`)
 func updateEvents() {
   eventsResponse := ssiClient.GetEvents()
   for _, event := range eventsResponse.Events {
+    if event.Ends == nil {
+      endOfDay := time.Date(event.Starts.Year(), event.Starts.Month(), event.Starts.Day(), 21, 59, 59, 0, event.Starts.Location())
+      event.Ends = &endOfDay
+      log.Println("Event (" + event.Name + ") reverted to same day as Start but End Of Day because of lack of end date")
+    }
     db.UpdateEvent(event)
   }
 }
@@ -60,7 +66,7 @@ func startPeriodicTask(interval time.Duration, task func()) {
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
-  io.WriteString(w, "SSI Calendar 1.1\n")
+  io.WriteString(w, "SSI Calendar 1.2\n")
 }
 
 func getEvents(w http.ResponseWriter, r *http.Request) {
@@ -79,12 +85,12 @@ func getCalendar(w http.ResponseWriter, r *http.Request) {
   cal := ics.NewCalendar()
   cal.SetMethod(ics.MethodRequest)
   for _, event := range events {
-    if time.Now().After(event.Ends) {
+    if time.Now().After(*event.Ends) {
       continue
     }
     // Also check here if the event is larger than a week, if so also ignore it
     // this is a stop-gap solution until I can figure out why these events appear in the first place
-    if int64(event.Starts.Sub(event.Ends)) / 24 > 7 {
+    if int64(event.Starts.Sub(*event.Ends)) / 24 > 7 {
       continue
     }
 
@@ -99,7 +105,7 @@ func getCalendar(w http.ResponseWriter, r *http.Request) {
     cevent.SetDtStampTime(event.Starts)
     cevent.SetModifiedAt(event.UpdatedAt)
     cevent.SetStartAt(event.Starts)
-    cevent.SetEndAt(event.Ends)
+    cevent.SetEndAt(*event.Ends)
     cevent.SetSummary(event.Name)
     cevent.SetURL("https://shootnscoreit.com/event/22/" + event.Id + "/")
 
