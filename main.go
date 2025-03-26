@@ -121,6 +121,9 @@ func getCalendar(w http.ResponseWriter, r *http.Request) {
     }
   }
   w.Header().Set("Content-Type", "text/calendar")
+  w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
+  w.Header().Set("Pragma", "no-cache")
+  w.Header().Set("Expires", "0")
   io.WriteString(w, cal.Serialize())
 }
 
