@@ -80,7 +80,7 @@ func doUpdate(w http.ResponseWriter, r *http.Request) {
   io.WriteString(w, "OK\n")
 }
 
-func getCalendar(w http.ResponseWriter, r *http.Request) {
+func getCalendar(includeEvent bool, includeRegistration bool, w http.ResponseWriter, r *http.Request) {
   events := db.GetEvents()
   cal := ics.NewCalendar()
   cal.SetMethod(ics.MethodRequest)
@@ -100,16 +100,18 @@ func getCalendar(w http.ResponseWriter, r *http.Request) {
       continue
     }
 
-    cevent := cal.AddEvent(event.Id)
-    cevent.SetCreatedTime(event.Starts)
-    cevent.SetDtStampTime(event.Starts)
-    cevent.SetModifiedAt(event.UpdatedAt)
-    cevent.SetStartAt(event.Starts)
-    cevent.SetEndAt(*event.Ends)
-    cevent.SetSummary(event.Name)
-    cevent.SetURL("https://shootnscoreit.com/event/22/" + event.Id + "/")
+    if (includeEvent) {
+      cevent := cal.AddEvent(event.Id)
+      cevent.SetCreatedTime(event.Starts)
+      cevent.SetDtStampTime(event.Starts)
+      cevent.SetModifiedAt(event.UpdatedAt)
+      cevent.SetStartAt(event.Starts)
+      cevent.SetEndAt(*event.Ends)
+      cevent.SetSummary(event.Name)
+      cevent.SetURL("https://shootnscoreit.com/event/22/" + event.Id + "/")
+    }
 
-    if time.Now().Before(event.RegistrationStarts) {
+    if time.Now().Before(event.RegistrationStarts) && includeRegistration {
       revent := cal.AddEvent("reg" + event.Id)
       revent.SetCreatedTime(event.RegistrationStarts)
       revent.SetDtStampTime(event.RegistrationStarts)
@@ -125,6 +127,18 @@ func getCalendar(w http.ResponseWriter, r *http.Request) {
   w.Header().Set("Pragma", "no-cache")
   w.Header().Set("Expires", "0")
   io.WriteString(w, cal.Serialize())
+}
+
+func getCombinedCalendar(w http.ResponseWriter, r *http.Request) {
+	getCalendar(true, true, w, r)
+}
+
+func getCompetitionsCalendar(w http.ResponseWriter, r *http.Request) {
+	getCalendar(true, false, w, r)
+}
+
+func getRegistrationsCalendar(w http.ResponseWriter, r *http.Request) {
+	getCalendar(false, true, w, r)
 }
 
 func main() {
@@ -147,7 +161,9 @@ func main() {
   // Set up HTTP server
   // Also handle SIGTERM so we can let the defers do their thing
   http.HandleFunc("/", getRoot)
-  http.HandleFunc("/calendar.ics", getCalendar)
+  http.HandleFunc("/calendar.ics", getCombinedCalendar)
+  http.HandleFunc("/competitions.ics", getCompetitionsCalendar)
+  http.HandleFunc("/registrations.ics", getRegistrationsCalendar)
   if debug {
     http.HandleFunc("/events", getEvents)
     http.HandleFunc("/update", doUpdate)
