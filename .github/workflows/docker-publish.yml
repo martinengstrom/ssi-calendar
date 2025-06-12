@@ -69,3 +69,34 @@ jobs:
           sbom: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Trigger a redeployment
+      - name: Trigger deployment
+        run: |
+          curl -X POST "https://$ARGO_BASE_URL/api/v1/workflows/ci-jobs" \
+            -H "Authorization: Bearer $ARGO_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{
+              "workflow": {
+                "metadata": {
+                  "generateName": "deploy-ssi-calendar-"
+                },
+                "spec": {
+                  "arguments": {
+                    "parameters": [
+                      {
+                        "name": "application",
+                        "value": "ssi-calendar"
+                      }
+                    ]
+                  },
+                  "workflowTemplateRef": {
+                    "name": "redeploy"
+                  }
+                }
+              }
+            }'
+        env:
+          ARGO_BASE_URL: ${{ secrets.ARGO_WORKFLOWS_BASE_URL }}
+          ARGO_TOKEN: ${{ secrets.ARGO_WORKFLOWS_TOKEN }}  
+
