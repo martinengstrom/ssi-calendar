@@ -73,29 +73,26 @@ jobs:
       # Trigger a redeployment
       - name: Trigger deployment
         run: |
-          curl -X POST "https://$ARGO_BASE_URL/api/v1/workflows/ci-jobs" \
+          WORKFLOW_NAME=$(curl -sX POST "https://$ARGO_BASE_URL/api/v1/workflows/ci-jobs" \
             -H "Authorization: Bearer $ARGO_TOKEN" \
             -H "Content-Type: application/json" \
-            --data '{
-              "workflow": {
-                "metadata": {
-                  "generateName": "deploy-ssi-calendar-"
-                },
-                "spec": {
-                  "arguments": {
-                    "parameters": [
-                      {
-                        "name": "application",
-                        "value": "ssi-calendar"
-                      }
-                    ]
-                  },
-                  "workflowTemplateRef": {
-                    "name": "redeploy"
-                  }
-                }
-              }
-            }'
+            --data '{"workflow":{"metadata":{"generateName":"deploy-ssi-calendar-"},"spec":{"arguments":{"parameters":[{"name":"application","value":"ssi-calendar"}]},"workflowTemplateRef":{"name":"redeploy"}}}}' | jq -r '.metadata.name')
+
+          while true; do
+            STATUS=$(curl -s -H "Authorization: Bearer $ARGO_TOKEN" \
+              "https://$ARGO_BASE_URL/api/v1/workflows/ci-jobs/$WORKFLOW_NAME" \
+              | jq -r '.status.phase')
+            
+            if [[ "$STATUS" == "Succeeded" ]]; then
+              echo "✅ Workflow succeeded"
+              exit 0
+            elif [[ "$STATUS" == "Failed" || "$STATUS" == "Error" || "$STATUS" == "Omitted" ]]; then
+              echo "❌ Workflow ended with status: $STATUS"
+              exit 1
+            fi
+            
+            sleep 3
+          done
         env:
           ARGO_BASE_URL: ${{ secrets.ARGO_WORKFLOWS_BASE_URL }}
           ARGO_TOKEN: ${{ secrets.ARGO_WORKFLOWS_TOKEN }}  
