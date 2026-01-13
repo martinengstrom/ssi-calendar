@@ -1,7 +1,0 @@
-Future TODO
-Implement per-user API key functionality to offer extra events like Squadding for events you have signed up for
-
-Available calendars:
-/calendar.ics		Combined competitions + registrations
-/competitions.ics	Competitions only (dates of competition)
-/registrations.ics	Registration dates of competititons only
