@@ -52,7 +52,7 @@ func (c *SSIClient) GetEvents() EventListResponse {
   isoDate := time.Now().Format("2006-01-02")
   req := graphql.NewRequest(`
     query($date: String!) {
-      events(starts_after: $date, status: "on", rule: "ip", firearms: "hg", region: "SWE") {
+      ip: events(starts_after: $date, status: "on", rule: "ip", firearms: "hg", region: "SWE") {
         id
         name
         starts
@@ -62,6 +62,20 @@ func (c *SSIClient) GetEvents() EventListResponse {
         registration_starts
         sub_rule
         ... on IpscMatchNode {
+          level
+        }
+      }
+      sc: events(starts_after: $date, rule: "sc", firearms: "hg", region: "SWE") {
+        id
+        name
+        starts
+        ends
+        state
+        status
+        registration_starts
+        get_full_absolute_url
+        sub_rule
+        ... on SteelMatchNode {
           level
         }
       }
