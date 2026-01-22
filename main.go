@@ -45,7 +45,11 @@ var levelRE = regexp.MustCompile(`^[lt][2-5]$`)
 
 func updateEvents() {
   eventsResponse := ssiClient.GetEvents()
-  for _, event := range eventsResponse.Events {
+  allEvents := append(
+    eventsResponse.IPSCEvents,
+    eventsResponse.SteelChallengeEvents...,
+  )
+  for _, event := range allEvents {
     if event.Ends == nil {
       endOfDay := time.Date(event.Starts.Year(), event.Starts.Month(), event.Starts.Day(), 21, 59, 59, 0, event.Starts.Location())
       event.Ends = &endOfDay

@@ -36,8 +36,8 @@ type TokenDetails struct {
 }
 
 type EventListResponse struct {
-  Events []EventDetails `json:"ip"`
-  Events []EventDetails `json:"sc"`
+  IPSCEvents []EventDetails           `json:"ip"`
+  SteelChallengeEvents []EventDetails `json:"sc"`
 }
 
 type EventDetails struct {
