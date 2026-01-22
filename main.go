@@ -39,11 +39,17 @@ import (
 
 var db *storage.Storage
 var ssiClient *client.SSIClient
-var levelRE = regexp.MustCompile(`^l[2-5]$`)
+// Will match "l2" or "t2" for level (IPSC) and tier (steel challenge) matches 2 and above.
+// The ratings should correspond basically the same between them. So level/tier 2 is the same
+var levelRE = regexp.MustCompile(`^[lt][2-5]$`)
 
 func updateEvents() {
   eventsResponse := ssiClient.GetEvents()
-  for _, event := range eventsResponse.Events {
+  allEvents := append(
+    eventsResponse.IPSCEvents,
+    eventsResponse.SteelChallengeEvents...,
+  )
+  for _, event := range allEvents {
     if event.Ends == nil {
       endOfDay := time.Date(event.Starts.Year(), event.Starts.Month(), event.Starts.Day(), 21, 59, 59, 0, event.Starts.Location())
       event.Ends = &endOfDay
