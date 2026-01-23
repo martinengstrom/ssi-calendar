@@ -72,7 +72,7 @@ func startPeriodicTask(interval time.Duration, task func()) {
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
-  io.WriteString(w, "SSI Calendar 1.2\n")
+  io.WriteString(w, "SSI Calendar 1.3\n")
 }
 
 func getEvents(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +114,7 @@ func getCalendar(includeEvent bool, includeRegistration bool, w http.ResponseWri
       cevent.SetStartAt(event.Starts)
       cevent.SetEndAt(*event.Ends)
       cevent.SetSummary(event.Name)
-      cevent.SetURL("https://shootnscoreit.com/event/22/" + event.Id + "/")
+      cevent.SetURL("https://" + event.URL)
     }
 
     if time.Now().Before(event.RegistrationStarts) && includeRegistration {
@@ -125,7 +125,7 @@ func getCalendar(includeEvent bool, includeRegistration bool, w http.ResponseWri
       revent.SetStartAt(event.RegistrationStarts)
       revent.SetEndAt(event.RegistrationStarts.Add(15 * time.Minute))
       revent.SetSummary("Registration opens " + event.Name)
-      revent.SetURL("https://shootnscoreit.com/event/22/" + event.Id + "/")
+      revent.SetURL("https://" + event.URL)
     }
   }
   w.Header().Set("Content-Type", "text/calendar")
