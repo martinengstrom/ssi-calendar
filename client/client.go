@@ -60,6 +60,7 @@ func (c *SSIClient) GetEvents() EventListResponse {
         state
         status
         registration_starts
+        get_full_absolute_url
         sub_rule
         ... on IpscMatchNode {
           level

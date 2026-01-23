@@ -48,6 +48,7 @@ type EventDetails struct {
   State string                  `json:"state"`
   Status string                 `json:"status"`
   RegistrationStarts time.Time  `json:"registration_starts"`
+  URL string                    `json:"get_full_absolute_url"`
   SubRule string                `json:"sub_rule"`
   Level string                  `json:"level"`
   UpdatedAt time.Time           `json:"updated_at"`
