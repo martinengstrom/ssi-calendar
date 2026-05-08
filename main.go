@@ -154,7 +154,9 @@ func main() {
 
   // Set up SSI client
   key := os.Getenv("SSI_APIKEY")
-  ssiClient = client.NewClient(key)
+  username := os.Getenv("SSI_USERNAME")
+  password := os.Getenv("SSI_PASSWORD")
+  ssiClient = client.NewClient(key, username, password)
 
   debug := strings.ToLower(os.Getenv("DEBUG")) == "true"
 

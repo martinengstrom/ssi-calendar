@@ -4,6 +4,19 @@ import (
   "time"
 )
 
+type RefreshTokenResponse struct {
+  Token        TokenDetails        `json:"token"`
+  RefreshToken RefreshTokenDetails `json:"refresh_token"`
+  Errors       ExpectedError       `json:"errors,omitempty"`
+  Success      bool                `json:"success"`
+}
+
+type ExpectedError map[string][]FieldError
+type FieldError struct {
+  Message string `json:"message"`
+  Code string    `json:"code"`
+}
+
 type TokenAuthResponse struct {
   TokenAuth TokenAuthDetails `json:"token_auth"`
 }
@@ -32,7 +45,14 @@ type RefreshTokenDetails struct {
 }
 
 type TokenDetails struct {
-  Token string `json:"token"`
+  Token   string       `json:"token"`
+  Payload TokenPayload `json:"payload"`
+}
+
+type TokenPayload struct {
+  Exp      time.Time  `json:"exp"`
+  Username string     `json:"username"`
+  OrigIat  time.Time  `json:"origIat"`
 }
 
 type EventListResponse struct {

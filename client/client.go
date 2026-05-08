@@ -10,11 +10,30 @@ import (
 
 type SSIClient struct {
   APIKey string
+  Token string
+  RefreshToken string
+  TokenExpiry time.Time
 }
 
-func NewClient(apikey string) *SSIClient {
-  return &SSIClient{
+func NewClient(apikey string, username string, password string) *SSIClient {
+  client := &SSIClient{
     APIKey: apikey,
+  }
+
+  authResponse := client.Auth(username, password)
+  client.Token = authResponse.TokenAuth.Token.Token
+  client.RefreshToken = authResponse.TokenAuth.RefreshToken.Token
+  client.TokenExpiry = authResponse.TokenAuth.Token.Payload.Exp
+
+  return client
+}
+
+func (c *SSIClient) refreshIfNeeded() {
+  if time.Now().Add(30 * time.Second).After(c.TokenExpiry) {
+    response := c.Refresh(c.RefreshToken)
+    c.Token = response.Token.Token
+    c.TokenExpiry = response.Token.Payload.Exp
+    c.RefreshToken = response.RefreshToken.Token
   }
 }
 
@@ -49,6 +68,8 @@ func (c *EventDetails) IsEqualTo(event EventDetails) bool {
 }
 
 func (c *SSIClient) GetEvents() EventListResponse {
+  c.refreshIfNeeded()
+
   isoDate := time.Now().Format("2006-01-02")
   req := graphql.NewRequest(`
     query($date: String!) {
@@ -84,7 +105,7 @@ func (c *SSIClient) GetEvents() EventListResponse {
   `)
 
   req.Var("date", isoDate)
-  req.Header.Set("Authorization", "JWT " + c.APIKey)
+  req.Header.Set("Authorization", "JWT " + c.Token)
   req.Header.Set("x-api-key", c.APIKey)
 
   var response EventListResponse
@@ -95,13 +116,18 @@ func (c *SSIClient) GetEvents() EventListResponse {
   return response
 }
 
-func (c *SSIClient) Renew(refreshToken string) {
+func (c *SSIClient) Refresh(refreshToken string) RefreshTokenResponse {
   req := graphql.NewRequest(`
     mutation($refreshToken: String!) {
       refresh_token(refresh_token: "$refreshToken", revoke_refresh_token: false) {
         success
         errors
         token {
+          payload {
+            exp
+            origIat
+            username
+          }
           token
         }
         refresh_token {
@@ -114,6 +140,17 @@ func (c *SSIClient) Renew(refreshToken string) {
 
   req.Var("refreshToken", refreshToken)
   req.Header.Set("x-api-key", c.APIKey)
+
+  var response RefreshTokenResponse
+  if err := c.Request(req, &response); err != nil {
+    log.Fatal(err)
+  }
+
+  if response.Errors != nil {
+    log.Fatal(response.Errors)
+  }
+
+  return response
 }
 
 func (c *SSIClient) Auth(username string, password string) TokenAuthResponse {
@@ -126,6 +163,11 @@ func (c *SSIClient) Auth(username string, password string) TokenAuthResponse {
           expires_at
         }
         token {
+          payload {
+            exp
+            username
+            origIat
+          }
           token
         }
         success
