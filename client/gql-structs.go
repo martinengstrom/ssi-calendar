@@ -5,6 +5,10 @@ import (
 )
 
 type RefreshTokenResponse struct {
+  Data RefreshTokenBody `json:"refresh_token"`
+}
+
+type RefreshTokenBody struct {
   Token        TokenDetails        `json:"token"`
   RefreshToken RefreshTokenDetails `json:"refresh_token"`
   Errors       ExpectedError       `json:"errors,omitempty"`

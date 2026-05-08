@@ -31,9 +31,9 @@ func NewClient(apikey string, username string, password string) *SSIClient {
 func (c *SSIClient) refreshIfNeeded() {
   if time.Now().Add(30 * time.Second).After(c.TokenExpiry) {
     response := c.Refresh(c.RefreshToken)
-    c.Token = response.Token.Token
-    c.TokenExpiry = response.Token.Payload.Exp
-    c.RefreshToken = response.RefreshToken.Token
+    c.Token = response.Data.Token.Token
+    c.TokenExpiry = response.Data.Token.Payload.Exp
+    c.RefreshToken = response.Data.RefreshToken.Token
   }
 }
 
@@ -119,7 +119,7 @@ func (c *SSIClient) GetEvents() EventListResponse {
 func (c *SSIClient) Refresh(refreshToken string) RefreshTokenResponse {
   req := graphql.NewRequest(`
     mutation($refreshToken: String!) {
-      refresh_token(refresh_token: "$refreshToken", revoke_refresh_token: false) {
+      refresh_token(refresh_token: $refreshToken, revoke_refresh_token: false) {
         success
         errors
         token {
@@ -146,8 +146,8 @@ func (c *SSIClient) Refresh(refreshToken string) RefreshTokenResponse {
     log.Fatal(err)
   }
 
-  if response.Errors != nil {
-    log.Fatal(response.Errors)
+  if response.Data.Errors != nil {
+    log.Fatal(response.Data.Errors)
   }
 
   return response
