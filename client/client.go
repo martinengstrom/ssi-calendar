@@ -85,6 +85,7 @@ func (c *SSIClient) GetEvents() EventListResponse {
 
   req.Var("date", isoDate)
   req.Header.Set("Authorization", "JWT " + c.APIKey)
+  req.Header.Set("x-api-key", c.APIKey)
 
   var response EventListResponse
   if err := c.Request(req, &response); err != nil {
@@ -112,6 +113,7 @@ func (c *SSIClient) Renew(refreshToken string) {
   `)
 
   req.Var("refreshToken", refreshToken)
+  req.Header.Set("x-api-key", c.APIKey)
 }
 
 func (c *SSIClient) Auth(username string, password string) TokenAuthResponse {
@@ -134,6 +136,7 @@ func (c *SSIClient) Auth(username string, password string) TokenAuthResponse {
 
   req.Var("username", username)
   req.Var("password", password)
+  req.Header.Set("x-api-key", c.APIKey)
 
   var response TokenAuthResponse
   if err := c.Request(req, &response); err != nil {
