@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/arran4/golang-ical v0.3.5
-	github.com/dgraph-io/badger/v4 v4.9.4
+	github.com/dgraph-io/badger/v4 v4.9.5
 	github.com/machinebox/graphql v0.2.2
 )
 
